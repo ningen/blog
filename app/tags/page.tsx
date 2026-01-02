@@ -24,7 +24,7 @@ export default async function TagsPage() {
           {tagCounts.map(({ tag, count }) => (
             <Link
               key={tag}
-              href={`/tags/${tag}`}
+              href={`/tags/${encodeURIComponent(tag)}`}
               className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full hover:bg-blue-200 transition-colors"
             >
               #{tag} ({count})

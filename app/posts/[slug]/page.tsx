@@ -26,7 +26,7 @@ export default async function PostPage({ params }: { params: { slug: string } })
             {post.tags.map((tag) => (
               <Link
                 key={tag}
-                href={`/tags/${tag}`}
+                href={`/tags/${encodeURIComponent(tag)}`}
                 className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm hover:bg-blue-200"
               >
                 #{tag}
