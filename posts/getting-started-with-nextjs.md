@@ -2,7 +2,7 @@
 title: Next.js 14ではじめるモダンなWebアプリケーション開発
 date: 2026-01-02
 excerpt: Next.js 14の新機能とApp Routerを使った効率的な開発方法を紹介します
-tags: [Next.js, React, TypeScript, Web開発]
+tags: [Next.js, React, TypeScript, web-development]
 category: [フロントエンド, React]
 ---
 
