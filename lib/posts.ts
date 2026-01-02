@@ -10,6 +10,26 @@ import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 
 const postsDirectory = path.join(process.cwd(), 'posts')
 
+/**
+ * タグに日本語（マルチバイト文字）が含まれているかチェック
+ * 含まれている場合はエラーをスロー
+ */
+function validateTagsAreAsciiOnly(tags: string[]) {
+  // 日本語文字を検出する正規表現（ひらがな、カタカナ、漢字、全角記号など）
+  const japaneseRegex = /[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf]/
+
+  const invalidTags = tags.filter(tag => japaneseRegex.test(tag))
+
+  if (invalidTags.length > 0) {
+    throw new Error(
+      `❌ Build Error: Tags must not contain Japanese characters.\n` +
+      `Found invalid tags: ${invalidTags.join(', ')}\n` +
+      `Please use English or ASCII-only characters for tags.\n` +
+      `Example: "Web開発" → "web-development", "非同期処理" → "async-programming"`
+    )
+  }
+}
+
 export interface Post {
   slug: string
   title: string
@@ -99,7 +119,12 @@ export async function getAllTags(): Promise<string[]> {
   allPosts.forEach((post) => {
     post.tags.forEach((tag) => tags.add(tag))
   })
-  return Array.from(tags).sort()
+  const tagArray = Array.from(tags).sort()
+
+  // タグのバリデーション：日本語が含まれていたらエラー
+  validateTagsAreAsciiOnly(tagArray)
+
+  return tagArray
 }
 
 export async function getAllCategories(): Promise<string[][]> {

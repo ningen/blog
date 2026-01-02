@@ -4,13 +4,12 @@ import Link from 'next/link'
 export async function generateStaticParams() {
   const tags = await getAllTags()
   return tags.map((tag) => ({
-    tag: encodeURIComponent(tag),
+    tag: tag,
   }))
 }
 
 export default async function TagPage({ params }: { params: { tag: string } }) {
-  const decodedTag = decodeURIComponent(params.tag)
-  const posts = await getPostsByTag(decodedTag)
+  const posts = await getPostsByTag(params.tag)
 
   return (
     <div>
@@ -19,7 +18,7 @@ export default async function TagPage({ params }: { params: { tag: string } }) {
           ← 記事一覧に戻る
         </Link>
         <h2 className="text-3xl font-bold">
-          タグ: <span className="text-blue-600">#{decodedTag}</span>
+          タグ: <span className="text-blue-600">#{params.tag}</span>
         </h2>
         <p className="text-gray-600 mt-2">{posts.length}件の記事</p>
       </div>
@@ -41,7 +40,7 @@ export default async function TagPage({ params }: { params: { tag: string } }) {
               {post.tags.map((tag) => (
                 <Link
                   key={tag}
-                  href={`/tags/${encodeURIComponent(tag)}`}
+                  href={`/tags/${tag}`}
                   className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm hover:bg-blue-200"
                 >
                   #{tag}

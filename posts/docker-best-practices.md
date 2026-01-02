@@ -2,7 +2,7 @@
 title: Dockerのベストプラクティス2026
 date: 2025-12-30
 excerpt: 本番環境で使えるDockerイメージの作成と運用のベストプラクティスを紹介します
-tags: [Docker, DevOps, コンテナ, インフラ]
+tags: [Docker, DevOps, container, infrastructure]
 category: [インフラ, Docker]
 ---
 

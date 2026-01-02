@@ -25,7 +25,7 @@ export default async function Home() {
               {post.tags.map((tag) => (
                 <Link
                   key={tag}
-                  href={`/tags/${encodeURIComponent(tag)}`}
+                  href={`/tags/${tag}`}
                   className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm hover:bg-blue-200"
                 >
                   #{tag}

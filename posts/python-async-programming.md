@@ -2,7 +2,7 @@
 title: Pythonの非同期プログラミング入門
 date: 2026-01-01
 excerpt: asyncioを使った効率的な非同期処理の実装方法を解説します
-tags: [Python, 非同期処理, asyncio]
+tags: [Python, async-programming, asyncio]
 category: [バックエンド, Python]
 ---
 
