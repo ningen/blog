@@ -89,6 +89,27 @@ npm run build
 npm start
 ```
 
+## GitHub Pagesへのデプロイ
+
+このブログはGitHub Pagesに自動デプロイされるように設定されています。
+
+### デプロイの流れ
+
+1. `main` ブランチにpushすると、GitHub Actionsが自動的に起動
+2. Next.jsアプリが静的HTMLにビルドされる
+3. GitHub Pagesに自動的にデプロイされる
+
+### 初回設定
+
+リポジトリの Settings > Pages で以下を設定：
+- Source: GitHub Actions
+- Build and deployment: GitHub Actions
+
+### 注意事項
+
+- リポジトリ名が `username.github.io` でない場合、`basePath` の設定が必要になる場合があります
+- その場合は環境変数 `NEXT_PUBLIC_BASE_PATH=/repository-name` を設定してください
+
 ## 技術スタック
 
 - **フレームワーク**: Next.js 14 (App Router)
