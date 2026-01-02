@@ -2,11 +2,12 @@ import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
 import { remark } from 'remark'
-import html from 'remark-html'
 import gfm from 'remark-gfm'
-import rehypeHighlight from 'rehype-highlight'
+import remarkRehype from 'remark-rehype'
+import rehypePrettyCode from 'rehype-pretty-code'
 import rehypeSlug from 'rehype-slug'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
+import rehypeStringify from 'rehype-stringify'
 
 const postsDirectory = path.join(process.cwd(), 'posts')
 
@@ -84,7 +85,14 @@ export async function getPostBySlug(slug: string): Promise<Post> {
 
   const processedContent = await remark()
     .use(gfm)
-    .use(html, { sanitize: false })
+    .use(remarkRehype, { allowDangerousHtml: true })
+    .use(rehypeSlug)
+    .use(rehypeAutolinkHeadings)
+    .use(rehypePrettyCode, {
+      theme: 'github-dark',
+      keepBackground: true,
+    })
+    .use(rehypeStringify, { allowDangerousHtml: true })
     .process(content)
 
   const contentHtml = processedContent.toString()
