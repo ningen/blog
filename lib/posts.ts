@@ -47,7 +47,7 @@ export async function getAllPosts(): Promise<PostMeta[]> {
       return {
         slug,
         title: data.title || '',
-        date: data.date || '',
+        date: typeof data.date === 'string' ? data.date : (data.date ? String(data.date).split('T')[0] : ''),
         excerpt: data.excerpt || '',
         tags: data.tags || [],
         category: data.category || undefined,
@@ -72,7 +72,7 @@ export async function getPostBySlug(slug: string): Promise<Post> {
   return {
     slug,
     title: data.title || '',
-    date: data.date || '',
+    date: typeof data.date === 'string' ? data.date : (data.date ? String(data.date).split('T')[0] : ''),
     excerpt: data.excerpt || '',
     tags: data.tags || [],
     category: data.category || undefined,

@@ -6,9 +6,6 @@ const nextConfig = {
   },
   basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
   pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'],
-  experimental: {
-    typedRoutes: true,
-  },
 }
 
 module.exports = nextConfig
