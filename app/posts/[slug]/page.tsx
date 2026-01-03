@@ -9,9 +9,10 @@ export async function generateStaticParams() {
   }))
 }
 
-export default async function PostPage({ params }: { params: { slug: string } }) {
+export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
   try {
-    const post = await getPostBySlug(params.slug)
+    const { slug } = await params
+    const post = await getPostBySlug(slug)
 
     return (
       <article className="bg-white rounded-lg shadow-md p-8">
