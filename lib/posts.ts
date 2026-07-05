@@ -10,6 +10,23 @@ import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import rehypeStringify from 'rehype-stringify'
 
 const postsDirectory = path.join(process.cwd(), 'posts')
+const supportedPostExtensions = ['.md', '.org'] as const
+
+type PostExtension = (typeof supportedPostExtensions)[number]
+
+interface PostSource {
+  slug: string
+  extension: PostExtension
+  fullPath: string
+}
+
+interface ParsedPostData {
+  title?: unknown
+  date?: unknown
+  excerpt?: unknown
+  tags?: unknown
+  category?: unknown
+}
 
 /**
  * タグに日本語（マルチバイト文字）が含まれているかチェック
@@ -50,39 +67,222 @@ export interface PostMeta {
   category?: string[]
 }
 
-export async function getAllPosts(): Promise<PostMeta[]> {
-  // postsディレクトリが存在しない場合は空配列を返す
+function getPostSources(): PostSource[] {
   if (!fs.existsSync(postsDirectory)) {
     return []
   }
 
-  const fileNames = fs.readdirSync(postsDirectory)
-  const allPostsData = fileNames
-    .filter((fileName) => fileName.endsWith('.md'))
+  return fs.readdirSync(postsDirectory)
     .map((fileName) => {
-      const slug = fileName.replace(/\.md$/, '')
-      const fullPath = path.join(postsDirectory, fileName)
-      const fileContents = fs.readFileSync(fullPath, 'utf8')
-      const { data } = matter(fileContents)
+      const extension = path.extname(fileName)
+      if (!isSupportedPostExtension(extension)) {
+        return undefined
+      }
 
       return {
-        slug,
-        title: data.title || '',
-        date: typeof data.date === 'string' ? data.date : (data.date ? String(data.date).split('T')[0] : ''),
-        excerpt: data.excerpt || '',
-        tags: data.tags || [],
-        category: data.category || undefined,
+        slug: path.basename(fileName, extension),
+        extension,
+        fullPath: path.join(postsDirectory, fileName),
       }
     })
-
-  return allPostsData.sort((a, b) => (a.date < b.date ? 1 : -1))
+    .filter((source): source is PostSource => source !== undefined)
 }
 
-export async function getPostBySlug(slug: string): Promise<Post> {
-  const fullPath = path.join(postsDirectory, `${slug}.md`)
-  const fileContents = fs.readFileSync(fullPath, 'utf8')
-  const { data, content } = matter(fileContents)
+function isSupportedPostExtension(extension: string): extension is PostExtension {
+  return supportedPostExtensions.includes(extension as PostExtension)
+}
 
+function getPostSourceBySlug(slug: string): PostSource {
+  const matches = getPostSources().filter((source) => source.slug === slug)
+
+  if (matches.length === 0) {
+    throw new Error(`Post not found: ${slug}`)
+  }
+
+  if (matches.length > 1) {
+    throw new Error(`Duplicate post slug found: ${slug}`)
+  }
+
+  return matches[0]
+}
+
+function normalizeDate(date: unknown): string {
+  return typeof date === 'string' ? date : (date ? String(date).split('T')[0] : '')
+}
+
+function normalizeStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map(String)
+  }
+
+  if (typeof value === 'string') {
+    return value.split(/[,\s]+/).map((item) => item.trim()).filter(Boolean)
+  }
+
+  return []
+}
+
+function normalizeOptionalStringArray(value: unknown): string[] | undefined {
+  const values = normalizeStringArray(value)
+  return values.length > 0 ? values : undefined
+}
+
+function normalizePostMeta(slug: string, data: ParsedPostData): PostMeta {
+  return {
+    slug,
+    title: typeof data.title === 'string' ? data.title : '',
+    date: normalizeDate(data.date),
+    excerpt: typeof data.excerpt === 'string' ? data.excerpt : '',
+    tags: normalizeStringArray(data.tags),
+    category: normalizeOptionalStringArray(data.category),
+  }
+}
+
+function parseOrgArray(value: string | undefined): string[] | undefined {
+  if (!value) {
+    return undefined
+  }
+
+  const trimmed = value.trim()
+  if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+    return trimmed.slice(1, -1).split(',').map((item) => item.trim()).filter(Boolean)
+  }
+
+  if (trimmed.startsWith(':') && trimmed.endsWith(':')) {
+    return trimmed.split(':').map((item) => item.trim()).filter(Boolean)
+  }
+
+  return trimmed.split(/[,\s]+/).map((item) => item.trim()).filter(Boolean)
+}
+
+function parseOrgPost(fileContents: string): { data: ParsedPostData, content: string } {
+  const meta = new Map<string, string>()
+  const contentLines: string[] = []
+  let inMetadata = true
+
+  for (const line of fileContents.split(/\r?\n/)) {
+    const keyword = line.match(/^#\+([A-Z_]+):\s*(.*)$/i)
+
+    if (inMetadata && keyword) {
+      meta.set(keyword[1].toLowerCase(), keyword[2].trim())
+      continue
+    }
+
+    if (line.trim() !== '' && !keyword) {
+      inMetadata = false
+    }
+
+    if (!keyword) {
+      contentLines.push(line)
+    }
+  }
+
+  const tags = parseOrgArray(meta.get('tags')) ?? parseOrgArray(meta.get('filetags')) ?? []
+
+  return {
+    data: {
+      title: meta.get('title') || '',
+      date: meta.get('date') || '',
+      excerpt: meta.get('excerpt') || meta.get('description') || '',
+      tags,
+      category: parseOrgArray(meta.get('category')),
+    },
+    content: orgToMarkdown(contentLines.join('\n').trim()),
+  }
+}
+
+function orgToMarkdown(content: string): string {
+  const markdownLines: string[] = []
+  let sourceLanguage: string | undefined
+  let inQuote = false
+
+  for (const line of content.split(/\r?\n/)) {
+    const sourceStart = line.match(/^#\+begin_src\s+(\S+)/i)
+    if (sourceStart) {
+      sourceLanguage = sourceStart[1]
+      markdownLines.push(`\`\`\`${sourceLanguage}`)
+      continue
+    }
+
+    if (/^#\+end_src/i.test(line)) {
+      sourceLanguage = undefined
+      markdownLines.push('```')
+      continue
+    }
+
+    if (sourceLanguage) {
+      markdownLines.push(line)
+      continue
+    }
+
+    if (/^#\+begin_quote/i.test(line)) {
+      inQuote = true
+      continue
+    }
+
+    if (/^#\+end_quote/i.test(line)) {
+      inQuote = false
+      markdownLines.push('')
+      continue
+    }
+
+    if (/^#\+/.test(line)) {
+      continue
+    }
+
+    const heading = line.match(/^(\*+)\s+(.*)$/)
+    if (heading) {
+      markdownLines.push(`${'#'.repeat(heading[1].length)} ${convertOrgInline(heading[2])}`)
+      continue
+    }
+
+    const convertedLine = convertOrgInline(line)
+    markdownLines.push(inQuote && convertedLine ? `> ${convertedLine}` : convertedLine)
+  }
+
+  return markdownLines.join('\n')
+}
+
+function convertOrgInline(value: string): string {
+  return value
+    .replace(/\[\[([^\]]+)\]\[([^\]]+)\]\]/g, (_match, target: string, label: string) => {
+      const normalizedTarget = normalizeOrgLinkTarget(target)
+      return isImageLinkTarget(normalizedTarget)
+        ? `![${label}](${normalizedTarget})`
+        : `[${label}](${normalizedTarget})`
+    })
+    .replace(/\[\[([^\]]+)\]\]/g, (_match, target: string) => {
+      const normalizedTarget = normalizeOrgLinkTarget(target)
+      return isImageLinkTarget(normalizedTarget)
+        ? `![](${normalizedTarget})`
+        : `[${normalizedTarget}](${normalizedTarget})`
+    })
+    .replace(/(^|[\s([{「『、。])=([^=\n]+)=($|[\s.,;:!?)}\]、。])/g, (_match, before: string, content: string, after: string) => {
+      return `${before}<code>${escapeHtml(content)}</code>${after}`
+    })
+    .replace(/(^|[\s([{「『、。])~([^~\n]+)~($|[\s.,;:!?)}\]、。])/g, (_match, before: string, content: string, after: string) => {
+      return `${before}<code>${escapeHtml(content)}</code>${after}`
+    })
+    .replace(/(^|[\s([{「『、。])\*([^*\n]+)\*($|[\s.,;:!?)}\]、。])/g, '$1<strong>$2</strong>$3')
+    .replace(/(^|[\s([{「『、。])\/([^/\n]+)\/($|[\s.,;:!?)}\]、。])/g, '$1<em>$2</em>$3')
+}
+
+function normalizeOrgLinkTarget(target: string): string {
+  return target.replace(/^file:/, '')
+}
+
+function isImageLinkTarget(target: string): boolean {
+  return /\.(avif|gif|jpe?g|png|svg|webp)$/i.test(target)
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+async function renderMarkdownToHtml(content: string): Promise<string> {
   const processedContent = await remark()
     .use(gfm)
     .use(remarkRehype, { allowDangerousHtml: true })
@@ -95,15 +295,29 @@ export async function getPostBySlug(slug: string): Promise<Post> {
     .use(rehypeStringify, { allowDangerousHtml: true })
     .process(content)
 
-  const contentHtml = processedContent.toString()
+  return processedContent.toString()
+}
+
+export async function getAllPosts(): Promise<PostMeta[]> {
+  const allPostsData = getPostSources()
+    .map((source) => {
+      const fileContents = fs.readFileSync(source.fullPath, 'utf8')
+      const { data } = source.extension === '.org' ? parseOrgPost(fileContents) : matter(fileContents)
+      return normalizePostMeta(source.slug, data)
+    })
+
+  return allPostsData.sort((a, b) => (a.date < b.date ? 1 : -1))
+}
+
+export async function getPostBySlug(slug: string): Promise<Post> {
+  const source = getPostSourceBySlug(slug)
+  const fileContents = fs.readFileSync(source.fullPath, 'utf8')
+  const { data, content } = source.extension === '.org' ? parseOrgPost(fileContents) : matter(fileContents)
+  const contentHtml = await renderMarkdownToHtml(content)
+  const meta = normalizePostMeta(slug, data)
 
   return {
-    slug,
-    title: data.title || '',
-    date: typeof data.date === 'string' ? data.date : (data.date ? String(data.date).split('T')[0] : ''),
-    excerpt: data.excerpt || '',
-    tags: data.tags || [],
-    category: data.category || undefined,
+    ...meta,
     content: contentHtml,
   }
 }

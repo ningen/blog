@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" role="img" viewBox="0 0 960 420">
+  <title>Org mode test image</title>
+  <rect width="960" height="420" fill="#f8fafc"/>
+  <rect x="48" y="48" width="864" height="324" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="96" y="130" fill="#0f172a" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="34" font-weight="700">#+TITLE: Org mode</text>
+  <text x="96" y="196" fill="#334155" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="28">[[/posts/getting-started-with-nextjs][link]]</text>
+  <text x="96" y="262" fill="#334155" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="28">[[file:/images/org-mode-test.svg]]</text>
+  <circle cx="795" cy="190" r="58" fill="#2563eb"/>
+  <path d="M760 190h70M795 155v70" stroke="#ffffff" stroke-width="14" stroke-linecap="round"/>
+</svg>

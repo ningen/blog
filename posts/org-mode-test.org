@@ -1,0 +1,50 @@
+#+TITLE: Org modeで書くテスト記事
+#+DATE: 2026-07-05
+#+DESCRIPTION: Org mode形式の記事をブログに統合するためのテスト記事です
+#+TAGS: org-mode nextjs writing
+#+CATEGORY: [コンテンツ管理, Org mode]
+
+* Org modeの記事
+
+この投稿は =.org= ファイルから生成されています。メタデータはYAML frontmatterではなく、Org modeらしい =#+TITLE:= や =#+DATE:= を使います。
+
+** できること
+
+- =#+TITLE:= を記事タイトルとして読む
+- =#+DATE:= を公開日として読む
+- =#+DESCRIPTION:= を記事一覧の要約として読む
+- =#+TAGS:= をスペース区切りのタグとして読む
+- =#+CATEGORY:= をカテゴリー階層として読む
+
+** リンクと強調
+
+Org modeのリンクは [[https://orgmode.org/][Org mode公式サイト]] のように書けます。
+
+既存のMarkdown記事にも [[/posts/getting-started-with-nextjs][Next.jsの記事]] のようにリンクできます。
+
+強調は *bold*、斜体は /italic/、インラインコードは ~const value = 1~ のように書きます。
+
+** 画像
+
+説明付きの画像リンクも表示できます。
+
+[[file:/images/org-mode-test.svg][Org modeテスト画像]]
+
+** コードブロック
+
+#+begin_src typescript
+type PostFormat = 'markdown' | 'org'
+
+const format: PostFormat = 'org'
+console.log(`This post is written in ${format}.`)
+#+end_src
+
+** 引用
+
+#+begin_quote
+Org modeの記事も既存のMarkdown記事と同じ一覧・タグ・詳細ページに表示されます。
+#+end_quote
+
+* まとめ
+
+既存の =.md= 記事を残したまま、=.org= のテスト記事を追加しました。

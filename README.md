@@ -4,7 +4,7 @@ Next.js 14とTypeScriptで構築した個人技術ブログシステムです。
 
 ## 主な機能
 
-- 📝 Markdownで記事を書ける
+- 📝 Markdown / Org modeで記事を書ける
 - 🏷️ タグによる記事の分類
 - 📂 カテゴリーの階層構造（親子関係）
 - 💻 シンタックスハイライト付きコードブロック
@@ -25,7 +25,7 @@ npm run dev
 
 ## 記事の作成
 
-`posts/` ディレクトリにMarkdownファイルを作成します。
+`posts/` ディレクトリにMarkdown（`.md`）またはOrg mode（`.org`）ファイルを作成します。
 
 ### Frontmatterの形式
 
@@ -64,6 +64,30 @@ console.log(greeting)
 
 対応言語: JavaScript, TypeScript, Python, Go, Rust, Docker, YAML, JSON など
 
+### Org mode記事の形式
+
+Org mode記事では、YAML frontmatterではなくOrg modeのキーワードを使います。
+
+```org
+#+TITLE: 記事のタイトル
+#+DATE: 2026-01-02
+#+DESCRIPTION: 記事の要約（一覧ページで表示されます）
+#+TAGS: nextjs react typescript
+#+CATEGORY: [フロントエンド, React]
+
+* 記事の本文
+
+ここに記事の内容を書きます。
+
+[[/posts/getting-started-with-nextjs][他の記事へのリンク]]
+[[file:/images/example.svg][画像の説明]]
+
+#+begin_src typescript
+const greeting: string = "Hello, World!"
+console.log(greeting)
+#+end_src
+```
+
 ## プロジェクト構成
 
 ```
@@ -75,7 +99,7 @@ console.log(greeting)
 │   └── tags/          # タグページ
 ├── lib/
 │   └── posts.ts       # 記事データ取得ロジック
-├── posts/             # Markdown記事ファイル
+├── posts/             # Markdown / Org mode記事ファイル
 └── public/            # 静的ファイル
 ```
 
@@ -115,7 +139,7 @@ npm start
 - **フレームワーク**: Next.js 14 (App Router)
 - **言語**: TypeScript
 - **スタイリング**: Tailwind CSS
-- **Markdown処理**: gray-matter, remark, rehype
+- **記事処理**: gray-matter, remark, rehype, Org modeキーワード対応
 - **シンタックスハイライト**: rehype-highlight
 
 ## ライセンス
