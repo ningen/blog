@@ -8,8 +8,9 @@ export async function generateStaticParams() {
   }))
 }
 
-export default async function TagPage({ params }: { params: { tag: string } }) {
-  const posts = await getPostsByTag(params.tag)
+export default async function TagPage({ params }: { params: Promise<{ tag: string }> }) {
+  const { tag } = await params
+  const posts = await getPostsByTag(tag)
 
   return (
     <div>
@@ -18,7 +19,7 @@ export default async function TagPage({ params }: { params: { tag: string } }) {
           ← 記事一覧に戻る
         </Link>
         <h2 className="text-3xl font-bold">
-          タグ: <span className="text-blue-600">#{params.tag}</span>
+          タグ: <span className="text-blue-600">#{tag}</span>
         </h2>
         <p className="text-gray-600 mt-2">{posts.length}件の記事</p>
       </div>
